@@ -41,7 +41,8 @@ Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생
 
 ## 🗃️ 시스템 아키텍처
 
-![image.png](attachment:ce370e34-3fdf-4f76-913c-faa43f6961b1:image.png)
+<img width="2702" height="1563" alt="image" src="https://github.com/user-attachments/assets/dc7cccfc-2d93-4256-aa99-266d1ea9868e" />
+
 
 ### 구성 요소 역할
 
