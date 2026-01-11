@@ -25,8 +25,30 @@ Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생
 > 
 
 ---
+## 👨‍👩‍👦 개발 팀원
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/minwoo-00">
+        <img src="https://github.com/minwoo-00.png" width="100px;" alt=""/><br />
+        <sub><b>조민우</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/ssh221">
+        <img src="https://github.com/ssh221.png" width="100px;" alt=""/><br />
+        <sub><b>신성혁</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/thdus">
+        <img src="https://github.com/thdus.png" width="100px;" alt=""/><br />
+        <sub><b>김소연</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
-개발 팀원
 
 ---
 
