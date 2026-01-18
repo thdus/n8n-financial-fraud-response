@@ -1,4 +1,3 @@
-// controller/AuthController.java
 package com.fds.controller;
 
 import com.fds.dto.LoginRequest;

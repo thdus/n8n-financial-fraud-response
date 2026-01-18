@@ -1,4 +1,3 @@
-// dto/FdsEvent.java
 package com.fds.dto;
 
 import java.time.LocalDateTime;

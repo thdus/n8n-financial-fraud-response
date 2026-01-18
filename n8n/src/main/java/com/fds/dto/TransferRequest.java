@@ -1,4 +1,3 @@
-// dto/TransferRequest.java
 package com.fds.dto;
 
 public record TransferRequest(

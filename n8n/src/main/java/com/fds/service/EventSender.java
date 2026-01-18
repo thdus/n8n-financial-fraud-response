@@ -1,4 +1,3 @@
-// service/EventSender.java
 package com.fds.service;
 
 import com.fds.dto.FdsEvent;
