@@ -1,0 +1,7 @@
+// dto/LoginRequest.java
+package com.fds.dto;
+
+public record LoginRequest(
+        String userId,
+        String password
+) {}
