@@ -15,15 +15,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(
-            @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest
+            @RequestBody LoginRequest request
     ) {
         authService.login(
                 request.userId(),
-                httpRequest.getRemoteAddr(),
-                httpRequest.getHeader("User-Agent")
+                request.country()
         );
 
         return "LOGIN_SUCCESS";
     }
+
+    @PostMapping("/logout")
+    public String logout(
+            @RequestBody LoginRequest request
+    ) {
+        authService.logout(
+                request.userId(),
+                request.country()
+        );
+
+        return "LOGOUT_SUCCESS";
+    }
 }
+

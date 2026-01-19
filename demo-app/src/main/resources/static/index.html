@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinVault | Premium Financial Services</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <script defer src="/app.js"></script>
+</head>
+<body>
+    <div class="background-layer-1"></div>
+    <div class="background-layer-2"></div>
+    <div class="background-layer-3"></div>
+    <div class="noise-overlay"></div>
+
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <span class="logo-text">FinVault</span>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-section="login">Login</button>
+                    <button class="nav-btn" data-section="transfer">Transfer</button>
+                    <button class="nav-btn" data-section="logout">Logout</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main">
+            <section id="login-section" class="section active">
+                <div class="section-wrapper">
+                    <div class="section-header">
+                        <h1 class="section-title">Welcome Back</h1>
+                        <p class="section-subtitle">Access your premium financial services</p>
+                    </div>
+                    <form id="login-form" class="form" action="/auth/login" method="POST">
+                        <div class="form-group">
+                            <label for="login-userId" class="form-label">User ID</label>
+                            <input type="text" id="login-userId" name="userId" class="form-input" placeholder="Enter your user ID" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password" class="form-label">Password</label>
+                            <input type="password" id="login-password" name="password" class="form-input" placeholder="Enter your password" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-country" class="form-label">Country</label>
+                            <select id="login-country" name="country" class="form-select" required>
+                                <option value="">Select your country</option>
+                                <option value="KR">South Korea</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="JP">Japan</option>
+                                <option value="SG">Singapore</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="form-submit">Sign In</button>
+                    </form>
+                    <div id="login-status" class="status" role="status"></div>
+                </div>
+            </section>
+
+            <section id="transfer-section" class="section">
+                <div class="section-wrapper">
+                    <div class="section-header">
+                        <h1 class="section-title">Secure Transfer</h1>
+                        <p class="section-subtitle">Send funds with confidence</p>
+                    </div>
+                    <form id="transfer-form" class="form" action="/transfer" method="POST">
+                        <div class="form-group">
+                            <label for="transfer-userId" class="form-label">User ID</label>
+                            <input type="text" id="transfer-userId" name="userId" class="form-input" placeholder="Enter your user ID" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="transfer-country" class="form-label">Country</label>
+                            <select id="transfer-country" name="country" class="form-select" required>
+                                <option value="">Select your country</option>
+                                <option value="KR">South Korea</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="JP">Japan</option>
+                                <option value="SG">Singapore</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="transfer-amount" class="form-label">Transfer Amount</label>
+                            <div class="input-wrapper">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" id="transfer-amount" name="amount" class="form-input" placeholder="0.00" step="1" min="1" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="form-submit">Initiate Transfer</button>
+                    </form>
+                    <div id="transfer-status" class="status" role="status"></div>
+                </div>
+            </section>
+
+            <section id="logout-section" class="section">
+                <div class="section-wrapper">
+                    <div class="section-header">
+                        <h1 class="section-title">Secure Logout</h1>
+                        <p class="section-subtitle">Safely end your session</p>
+                    </div>
+                    <form id="logout-form" class="form" action="/auth/logout" method="POST">
+                        <div class="form-group">
+                            <label for="logout-userId" class="form-label">User ID</label>
+                            <input type="text" id="logout-userId" name="userId" class="form-input" placeholder="Enter your user ID" required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="logout-country" class="form-label">Country</label>
+                            <select id="logout-country" name="country" class="form-select" required>
+                                <option value="">Select your country</option>
+                                <option value="KR">South Korea</option>
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="JP">Japan</option>
+                                <option value="SG">Singapore</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="form-submit form-submit--danger">Sign Out</button>
+                    </form>
+                    <div id="logout-status" class="status" role="status"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p class="footer-text">FinVault Premium Financial Services</p>
+            <p class="footer-subtext">Secure. Private. Exclusive.</p>
+        </footer>
+    </div>
+</body>
+</html>

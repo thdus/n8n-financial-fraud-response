@@ -15,16 +15,15 @@ public class TransferController {
 
     @PostMapping
     public String transfer(
-            @RequestBody TransferRequest request,
-            HttpServletRequest httpRequest
+            @RequestBody TransferRequest request
     ) {
         transferService.transfer(
                 request.userId(),
                 request.amount(),
-                httpRequest.getRemoteAddr(),
-                httpRequest.getHeader("User-Agent")
+                request.country()
         );
 
         return "TRANSFER_REQUESTED";
     }
 }
+
