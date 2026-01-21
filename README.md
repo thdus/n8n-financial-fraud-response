@@ -7,8 +7,8 @@
 
 ## 💡 개요
 
-본 프로젝트는 **금융 서비스에서 발생하는 로그인 및 거래 로그를 기반으로
-이상금융거래(FDS)를 탐지하고 대응을 자동화**하는 시스템이다.
+n8n을 활용하여 **금융 서비스에서 발생하는 로그인 및 거래 로그를 기반으로
+이상금융거래를 탐지하고 대응하는 과정을 자동화** 해보는 프로젝트이다.
 
 Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생한 이벤트를
 
@@ -29,22 +29,25 @@ Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/minwoo-00">
-        <img src="https://github.com/minwoo-00.png" width="100px;" alt=""/><br />
-        <sub><b>조민우</b></sub>
-      </a>
+      <a href="https://github.com/minwoo-00"><img src="https://github.com/minwoo-00.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>조민우</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/minwoo-00">@minwoo-00</a>
     </td>
     <td align="center">
-      <a href="https://github.com/ssh221">
-        <img src="https://github.com/ssh221.png" width="100px;" alt=""/><br />
-        <sub><b>신성혁</b></sub>
-      </a>
+      <a href="https://github.com/ssh221"><img src="https://github.com/ssh221.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>신성혁</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/ssh221">@ssh221</a>
     </td>
     <td align="center">
-      <a href="https://github.com/thdus">
-        <img src="https://github.com/thdus.png" width="100px;" alt=""/><br />
-        <sub><b>김소연</b></sub>
-      </a>
+      <a href="https://github.com/thdus"><img src="https://github.com/thdus.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>김소연</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/thdus">@thdus</a>
     </td>
   </tr>
 </table>
