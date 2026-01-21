@@ -7,44 +7,36 @@
 
 ## 💡 개요
 
-본 프로젝트는 **금융 서비스에서 발생하는 로그인 및 거래 로그를 기반으로
-이상금융거래(FDS)를 탐지하고 대응을 자동화**하는 시스템이다.
+n8n을 활용하여 **금융 서비스에서 발생하는 로그인 및 거래 로그를 기반으로
+이상금융거래를 탐지하고 대응하는 과정을 자동화** 해보는 프로젝트이다.
 
-Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생한 이벤트를
+<img width="856" height="362" alt="image" src="https://github.com/user-attachments/assets/ad35f858-f5d3-4949-bd99-8f607fc88889" />
 
-**n8n 워크플로우로 수집**하고,
-
-**룰 기반 점수화 방식**으로 이상 여부를 판단한 뒤
-
-알림, 차단, 기록 등 **대응 프로세스를 자동화**한다.
-
-> 본 프로젝트의 핵심 목적은
-> 
-> 
-> **“이상 탐지 로직이 아닌, 보안 대응 자동화 오케스트레이션”** 이다.
-> 
 
 ---
 ## 👨‍👩‍👦 개발 팀원
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/minwoo-00">
-        <img src="https://github.com/minwoo-00.png" width="100px;" alt=""/><br />
-        <sub><b>조민우</b></sub>
-      </a>
+      <a href="https://github.com/minwoo-00"><img src="https://github.com/minwoo-00.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>조민우</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/minwoo-00">@minwoo-00</a>
     </td>
     <td align="center">
-      <a href="https://github.com/ssh221">
-        <img src="https://github.com/ssh221.png" width="100px;" alt=""/><br />
-        <sub><b>신성혁</b></sub>
-      </a>
+      <a href="https://github.com/ssh221"><img src="https://github.com/ssh221.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>신성혁</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/ssh221">@ssh221</a>
     </td>
     <td align="center">
-      <a href="https://github.com/thdus">
-        <img src="https://github.com/thdus.png" width="100px;" alt=""/><br />
-        <sub><b>김소연</b></sub>
-      </a>
+      <a href="https://github.com/thdus"><img src="https://github.com/thdus.png" width="100px;" alt=""/></a>
+      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
+      <b>김소연</b>
+      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
+      <a href="https://github.com/thdus">@thdus</a>
     </td>
   </tr>
 </table>
@@ -94,7 +86,7 @@ Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생
 ### Storage
 
 - Google Sheets (Rule Management)
-- PostgreSQL / Elasticsearch (Anomaly Logs, Optional)
+- Redis / Elasticsearch (Anomaly Logs, Optional)
 
 ### Notification
 
@@ -102,93 +94,98 @@ Java(Spring Boot) 기반의 간단한 금융 웹 애플리케이션에서 발생
 
 ---
 
-## 4. 주요 기능
+## 🧩 주요 기능
 
-### ✅ 1) 금융 기능 시뮬레이션
+### 💳 금융 기능 시뮬레이션
 
 - 로그인
-- 잔액 조회
 - 송금
 
-### ✅ 2) 로그 기반 이벤트 수집
+### 📡 로그 기반 이벤트 수집
 
 - 로그인 성공/실패
 - 송금 요청
 - IP, User-Agent, 금액, 시간 정보 포함
 
-### ✅ 3) 룰 기반 점수화 (Rule-based Scoring)
+### 🧮 룰 기반 점수화 (Rule-based Scoring)
 
 - 룰은 **Google Sheets**에서 관리
 - n8n이 룰을 조회하여 점수 계산
 
-예시 룰:
-
-| Rule | 설명 | 점수 |
-| --- | --- | --- |
-| NEW_IP | 신규 IP 로그인 | +20 |
-| HIGH_AMOUNT | 평균 대비 고액 송금 | +30 |
-| RAPID_TRANSFER | 로그인 직후 송금 | +30 |
+  예시 룰:
+  
+  | Rule_ID | Category | Rule_Name | 조건 설명 | Target Field | Operator | Threshold | Score |
+  |--------|----------|-----------|-----------|--------------|----------|-----------|-------|
+  | R001 | LOGIN | 해외 로그인 | 국내(KR) 외 국가에서 로그인 발생 | country | != | KR | +20 |
+  | R002 | TRANSFER | 고액 송금 | 기준 금액 이상 송금 요청 | amount | >= | 5,000,000 | +30 |
+  | R003 | LOGIN | 야간 로그인 | 심야 시간대 로그인 | hour | BETWEEN | 0 ~ 5 | +20 |
+  | R004 | TRANSFER | 단시간 다회 송금 | 짧은 시간 내 송금 횟수 초과 | tx_count | > | 3 | +30 |
+  
+  사용자별 위험 점수 집계 현황:
+  
+  | User_ID | Current_Total_Score | Last_Update_Time | Triggered_Rules |
+  |--------|---------------------|------------------|-----------------|
+  | user_01 | 120 | 2026-01-11 04:06:30 +09:00 | 야간 로그인, 단시간 다회 송금, 단시간 다회 송금 |
+  | user_02 | 20 | 2024-05-20 13:50 | 야간 로그인 |
 
 ---
 
-### ✅ 4) 이상금융거래 대응 자동화
+### 🚨 이상금융거래 대응 자동화
 
 | 위험도 | 대응 |
 | --- | --- |
 | LOW | 로그 저장 |
-| MEDIUM | Slack 알림 |
-| HIGH | Slack 알림 + 거래 차단(API 호출) |
+| MEDIUM | 로그 저장 + 본인 인증(API 호출)|
+| HIGH | 로그 저장 + Slack 알림 + 거래 차단(API 호출) |
 
 ---
 
-### ✅ 5) 이상 로그 관리
+### 🗂️ 이상 로그 관리
 
 - 이상 이벤트만 별도로 저장
 - 관리자가 빠르게 확인 가능
 
 ---
 
-## 5. n8n 활용 포인트 (Why n8n?)
+## 🔁 n8n 활용 포인트 (Why n8n?)
 
 본 프로젝트에서 **n8n은 단순 알림 도구가 아니라 중앙 판단 엔진** 역할을 수행한다.
 
-- Webhook 기반 이벤트 수집
-- 룰 데이터 외부화 (Google Sheets)
-- Code Node를 통한 점수화
-- 위험도별 분기 처리 (IF / Switch)
-- Slack / API / DB 연동 자동화
-- Human-in-the-loop 확장 가능
+<img width="960" height="774" alt="image" src="https://github.com/user-attachments/assets/8410b8a7-a0fe-4349-9609-60ef4db36592" />
 
-> “탐지는 애플리케이션에서,
-> 
-> 
-> 판단과 대응은 n8n에서 수행”
-> 
 
 ---
 
-## 7. 예시 이벤트 로그 (Sample Event)
+## 📄 예시 이벤트 로그 (Sample Event)
 
 ```json
 {
-"eventType":"TRANSFER",
-"userId":"user123",
-"amount":5000000,
-"loginIp":"10.0.0.5",
-"requestIp":"203.0.113.10",
-"userAgent":"Chrome/120",
-"timestamp":"2026-01-08T17:30:00"
+"ts": "2026-01-11T18:06:30+09:00",
+"event_type": "TRANSFER",
+"event_id": "0c0f6e5c-0f7c-4b3d-8f2f-8b8df7a4b9d1",
+"user_id": "user_01",
+"result": "SUCCESS",
+"src_ip": "203.0.113.10",
+"country": "US",
+"hour": 18,
+"amount": 5500000,
+"to_bank": "Woori",
+"to_account_id": "110-***-1234"
 }
 
 ```
 
 ---
 
-## 트러블 슈팅 / 프로젝트 과정
+## 🎯 프로젝트 과정
 
 ---
 
-## 9. 결론
+## 🚧 트러블 슈팅
+
+---
+
+## 🔍 한계 및 아쉬운 점
 
 > “n8n을 중심으로 금융 로그를 분석하고
 이상금융거래 대응을 자동화한 보안 오케스트레이션 시스템”
