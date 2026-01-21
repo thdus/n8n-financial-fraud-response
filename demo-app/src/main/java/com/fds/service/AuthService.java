@@ -206,4 +206,8 @@ public class AuthService {
         User user = USERS.get(userId);
         return user != null ? user.getBlocked() : false;
     }
+
+    public static User getUser(String userId) {
+        return USERS.get(userId);
+    }
 }

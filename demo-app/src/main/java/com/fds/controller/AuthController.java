@@ -1,9 +1,12 @@
 package com.fds.controller;
 
 import com.fds.dto.LoginRequest;
+import com.fds.dto.User;
 import com.fds.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,6 +47,22 @@ public class AuthController {
                     );
 
         return result.equals("SUCCESS") ? "LOGOUT_SUCCESS" : "LOGOUT_FAILURE";
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<String> verify(@RequestBody LoginRequest request) {
+        User user = AuthService.getUser(request.userId());
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("USER_NOT_FOUND");
+        }
+
+        if (!user.getPassword().equals(request.password())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("INVALID_PASSWORD");
+        }
+
+        // 이벤트 전송 없이 비밀번호만 검증
+        return ResponseEntity.ok("VERIFIED");
     }
 
 }

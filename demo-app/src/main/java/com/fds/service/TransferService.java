@@ -1,7 +1,6 @@
 package com.fds.service;
 
 import com.fds.dto.FdsEvent;
-import com.fds.dto.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +21,8 @@ import java.util.UUID;
 public class TransferService {
 
     private static final String RESULT_SUCCESS = "SUCCESS";
+    private static final String RESULT_VERIFICATION_REQUIRED = "VERIFICATION_REQUIRED";
+    private static final String RESULT_BLOCKED = "BLOCKED";
     private static final String SAMPLE_TO_BANK = "Woori";
     private static final String SAMPLE_TO_ACCOUNT_ID = "110-***-1234";
     private static final Map<String, String> COUNTRY_IP_MAP = Map.of(
@@ -34,9 +35,15 @@ public class TransferService {
 
     private final EventSender eventSender;
     private final StringRedisTemplate redisTemplate;
-    private final GoogleSheetsService googleSheetsService;  // ← 추가!
+    private final GoogleSheetsService googleSheetsService;
 
+    // 기존 메소드 - 내부적으로 새 메소드 호출
     public void transfer(String userId, Long amount, String country, HttpServletRequest request) {
+        transfer(userId, amount, country, false, request);
+    }
+
+    // 새 메소드 - verified 파라미터 추가
+    public Map<String, Object> transfer(String userId, Long amount, String country, Boolean verified, HttpServletRequest request) {
         ZonedDateTime now = ZonedDateTime.now();
         String normalizedCountry = normalizeCountry(country);
         String srcIp = getClientIp(request, normalizedCountry);
@@ -61,7 +68,7 @@ public class TransferService {
                     "TRANSFER",
                     UUID.randomUUID().toString(),
                     userId,
-                    "BLOCKED",
+                    RESULT_BLOCKED,
                     srcIp,
                     normalizedCountry,
                     now.getHour(),
@@ -71,60 +78,82 @@ public class TransferService {
             );
             eventSender.send(event);
 
-            throw new IllegalStateException("의심스러운 활동으로 인해 계정이 차단되었습니다.");
-        }
-
-        // 2. Risk Level 조회 (실시간 위험도 체크)
-        String riskLevel = getRiskLevel(userId);
-
-        // HIGH: 자동으로 blocked 상태로 변경
-        if ("HIGH".equals(riskLevel)) {
-            log.warn("TRANSFER_AUTO_BLOCKED userId={} amount={} riskLevel=HIGH (auto-blocking)", userId, amount);
-
-            // User를 blocked 상태로 변경
-            AuthService.updateUserBlocked(userId, true);
-
-            FdsEvent event = new FdsEvent(
-                    now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                    "TRANSFER",
-                    UUID.randomUUID().toString(),
-                    userId,
-                    "BLOCKED",
-                    srcIp,
-                    normalizedCountry,
-                    now.getHour(),
-                    amount,
-                    SAMPLE_TO_BANK,
-                    SAMPLE_TO_ACCOUNT_ID
+            return Map.of(
+                    "status", RESULT_BLOCKED,
+                    "message", "의심스러운 활동으로 인해 계정이 차단되었습니다.",
+                    "amount", amount,
+                    "toBank", SAMPLE_TO_BANK
             );
-            eventSender.send(event);
-
-            throw new IllegalStateException("의심스러운 활동으로 인해 거래가 차단되었습니다.");
         }
 
-        // MEDIUM: 추가 인증 필요 (blocked 상태는 변경하지 않음)
-        if ("MEDIUM".equals(riskLevel)) {
-            log.warn("TRANSFER_VERIFICATION_REQUIRED userId={} amount={} riskLevel=MEDIUM", userId, amount);
+        // 2. verified=true면 추가 인증 완료로 간주하고 위험도 체크 스킵
+        String riskLevel;
+        if (Boolean.TRUE.equals(verified)) {
+            log.info("VERIFIED_TRANSFER userId={} amount={} - bypassing risk check", userId, amount);
+            riskLevel = "VERIFIED";
+        } else {
+            // 2-1. Risk Level 조회 (실시간 위험도 체크)
+            riskLevel = getRiskLevel(userId);
 
-            FdsEvent event = new FdsEvent(
-                    now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                    "TRANSFER",
-                    UUID.randomUUID().toString(),
-                    userId,
-                    "VERIFICATION_REQUIRED",
-                    srcIp,
-                    normalizedCountry,
-                    now.getHour(),
-                    amount,
-                    SAMPLE_TO_BANK,
-                    SAMPLE_TO_ACCOUNT_ID
-            );
-            eventSender.send(event);
+            // HIGH: 자동으로 blocked 상태로 변경
+            if ("HIGH".equals(riskLevel)) {
+                log.warn("TRANSFER_AUTO_BLOCKED userId={} amount={} riskLevel=HIGH (auto-blocking)", userId, amount);
 
-            throw new IllegalStateException("보안 확인이 필요합니다. 추가 인증을 완료해주세요.");
+                // User를 blocked 상태로 변경
+                AuthService.updateUserBlocked(userId, true);
+
+                FdsEvent event = new FdsEvent(
+                        now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                        "TRANSFER",
+                        UUID.randomUUID().toString(),
+                        userId,
+                        RESULT_BLOCKED,
+                        srcIp,
+                        normalizedCountry,
+                        now.getHour(),
+                        amount,
+                        SAMPLE_TO_BANK,
+                        SAMPLE_TO_ACCOUNT_ID
+                );
+                eventSender.send(event);
+
+                return Map.of(
+                        "status", RESULT_BLOCKED,
+                        "message", "의심스러운 활동으로 인해 거래가 차단되었습니다.",
+                        "amount", amount,
+                        "toBank", SAMPLE_TO_BANK
+                );
+            }
+
+            // MEDIUM: 추가 인증 필요 (blocked 상태는 변경하지 않음)
+            if ("MEDIUM".equals(riskLevel)) {
+                log.warn("TRANSFER_VERIFICATION_REQUIRED userId={} amount={} riskLevel=MEDIUM", userId, amount);
+
+                FdsEvent event = new FdsEvent(
+                        now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                        "TRANSFER",
+                        UUID.randomUUID().toString(),
+                        userId,
+                        RESULT_VERIFICATION_REQUIRED,
+                        srcIp,
+                        normalizedCountry,
+                        now.getHour(),
+                        amount,
+                        SAMPLE_TO_BANK,
+                        SAMPLE_TO_ACCOUNT_ID
+                );
+                eventSender.send(event);
+
+                return Map.of(
+                        "status", RESULT_VERIFICATION_REQUIRED,
+                        "message", "보안 확인이 필요합니다. 추가 인증을 완료해주세요.",
+                        "amount", amount,
+                        "toBank", SAMPLE_TO_BANK
+                );
+            }
         }
 
-        // LOW: 정상 처리
+        // LOW 또는 VERIFIED: 정상 처리
         FdsEvent event = new FdsEvent(
                 now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 "TRANSFER",
@@ -145,6 +174,13 @@ public class TransferService {
         log.info("TRANSFER_SUCCESS userId={} amount={} country={} srcIp={} timestamp={} toBank={} toAccountId={} riskLevel={}",
                 userId, amount, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                 SAMPLE_TO_BANK, SAMPLE_TO_ACCOUNT_ID, riskLevel);
+
+        return Map.of(
+                "status", RESULT_SUCCESS,
+                "message", "송금이 성공적으로 처리되었습니다.",
+                "amount", amount,
+                "toBank", SAMPLE_TO_BANK
+        );
     }
 
     /**
