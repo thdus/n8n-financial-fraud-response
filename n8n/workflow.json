@@ -2,37 +2,26 @@
   "name": "My workflow",
   "nodes": [
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -1600,
-        240
-      ],
-      "id": "0376881f-4820-4393-a9f6-bbf73a88190a",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
       "parameters": {
         "documentId": {
           "__rl": true,
-          "value": "12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo",
+          "value": "1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4",
           "mode": "list",
-          "cachedResultName": "n8n 프로젝트 rules",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit?usp=drivesdk"
+          "cachedResultName": "n8n_rule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": 313461715,
+          "value": 1810420859,
           "mode": "list",
           "cachedResultName": "User_Risk_Status",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit#gid=313461715"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit#gid=1810420859"
         },
         "filtersUI": {
           "values": [
             {
               "lookupColumn": "User_ID",
-              "lookupValue": "={{ $('When clicking ‘Execute workflow’').item.json.user_id }}"
+              "lookupValue": "={{ $('Webhook').first().json.body.user_id }}"
             }
           ]
         },
@@ -43,55 +32,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -672,
-        288
+        -2544,
+        48
       ],
-      "id": "fe78e476-5c4f-4c2a-b511-82a2d30442ee",
+      "id": "33680d5b-a9b6-47f7-9982-bd6816285b09",
       "name": "user_risk_statement",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "n9ciutuxc852fbMf",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo",
-          "mode": "list",
-          "cachedResultName": "n8n 프로젝트 rules",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "Rule_Set",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit#gid=0"
-        },
-        "filtersUI": {
-          "values": [
-            {
-              "lookupColumn": "Category",
-              "lookupValue": "={{ $('When clicking ‘Execute workflow’').item.json.event_type }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        -672,
-        144
-      ],
-      "id": "7fe3bf9e-3e92-4f59-b9f3-4654afa1bc55",
-      "name": "rule_set",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "n9ciutuxc852fbMf",
+          "id": "V2rzgCtBLjJw9GB5",
           "name": "Google Sheets account"
         }
       }
@@ -179,99 +127,43 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        176,
-        208
+        -1600,
+        -64
       ],
-      "id": "14b6b0c7-7efa-4cd6-a2c8-6d6aecb80e19",
-      "name": "위험도 분류"
+      "id": "c32c5cd4-06fe-44fe-8619-134ebef7f915",
+      "name": "위험도 분류",
+      "executeOnce": true
     },
     {
       "parameters": {
-        "jsCode": "const userState = $input.all().map((item) => item.json)[0];\nconst ruleSet = $(\"rule_set\")\n  .all()\n  .map((item) => item.json);\nconst logData = $(\"When clicking ‘Execute workflow’\")\n  .all()\n  .map((item) => item.json)[0];\n// const transfer_count = $(\"get_tx_count\")\n//   .all()\n//   .map((item) => item.json)[0];\n\nlet totalScore = userState.Current_Total_Score;\nlet triggeredRules = []\ntriggeredRules.push(userState.Triggered_Rules);\n\nruleSet.forEach((rule) => {\n  if (\n    rule.Rule_ID === \"R001\" &&\n    rule.Is_Active &&\n    logData[rule.Target_Field] &&\n    logData[rule.Target_Field] != rule.Threshold\n  ) {\n    totalScore += rule.Score;\n    triggeredRules.push(rule.Rule_Name);\n  }\n  if (\n    rule.Rule_ID === \"R002\" &&\n    rule.Is_Active &&\n    logData[rule.Target_Field] &&\n    logData[rule.Target_Field] >= rule.Threshold\n  ) {\n    totalScore += rule.Score;\n    triggeredRules.push(rule.Rule_Name);\n  }\n  if (\n    rule.Rule_ID === \"R003\" &&\n    rule.Is_Active &&\n    logData[rule.Target_Field] &&\n    logData[rule.Target_Field] >= 0 &&\n    logData[rule.Target_Field] <= 5\n  ) {\n    totalScore += rule.Score;\n    triggeredRules.push(rule.Rule_Name);\n  }\n  \n  if (\n    rule.Rule_ID === \"R004\" &&\n    rule.Is_Active &&\n    //logData[rule.Target_Field] &&\n    rule.Operator === \">\" &&\n    $('get_tx_count').first().json.tx_count > rule.Threshold\n  ) {\n    totalScore += rule.Score;\n    triggeredRules.push(rule.Rule_Name);\n  }\n});\n\nlet riskLevel = \"NONE\";\nif (totalScore >= 70) {\n  riskLevel = \"HIGH\";\n} else if (totalScore >= 40) {\n  riskLevel = \"MEDIUM\";\n} else if (totalScore > 0){\n  riskLevel = \"LOW\";\n}\n\nconst updatedUserRiskStatement = {\n  ...userState,\n  Current_Total_Score: totalScore,\n  Last_Update_Time: logData.ts,\n  Triggered_Rules: triggeredRules.join(\", \"),\n  Risk_Level: riskLevel,\n  Category: logData.event_type\n};\n\nreturn [{ json: updatedUserRiskStatement }];\n"
+        "jsCode": "// 1️⃣ Merge된 입력 데이터 수집\nconst mergedData = $input.first().json;\n\n// rule_set은 별도로 가져오기\nconst ruleSet = $(\"rule_set\").all().map(item => item.json);\n\n// 2️⃣ userState 추출\nconst userState = {\n  User_ID: mergedData.User_ID,\n  Current_Total_Score: mergedData.Current_Total_Score || 0,\n  Last_Update_Time: mergedData.Last_Update_Time,\n  Triggered_Rules: mergedData.Triggered_Rules || \"\",\n  Risk_Level: mergedData.Risk_Level\n};\n\n// 3️⃣ tx_count 추출\nconst txCount = Number(mergedData.tx_count || 0);\n\n// 4️⃣ Webhook 데이터 - Switch나 transfer에서 가져와야 함\n// Merge에 Webhook 데이터가 없으므로 직접 참조\nlet logData;\ntry {\n  logData = $(\"Switch\").first().json;\n} catch (e) {\n  // Switch가 없으면 Webhook 직접 참조\n  logData = $(\"Webhook\").first().json.body;\n}\n\n// 5️⃣ 초기 상태\nlet totalScore = Number(userState.Current_Total_Score || 0);\nlet triggeredRules = [];\nif (userState.Triggered_Rules) {\n  triggeredRules.push(userState.Triggered_Rules);\n}\n\n// 6️⃣ 룰 평가\nruleSet.forEach(rule => {\n  if (!rule.Is_Active) return;\n  let actualValue;\n  \n  if (rule.Target_Field === \"tx_count\") {\n    actualValue = Number(txCount);\n  } else {\n    actualValue = logData[rule.Target_Field];\n  }\n  \n  if (actualValue === undefined || actualValue === null) return;\n  \n  let matched = false;\n  switch (rule.Operator) {\n    case \"!=\":\n      matched = actualValue != rule.Threshold;\n      break;\n    case \">\":\n      matched = Number(actualValue) > Number(rule.Threshold);\n      break;\n    case \">=\":\n      matched = Number(actualValue) >= Number(rule.Threshold);\n      break;\n    case \"between\":\n      const [min, max] = JSON.parse(\n        rule.Threshold.replace(/'/g, '\"')\n      );\n      matched =\n        Number(actualValue) >= Number(min) &&\n        Number(actualValue) <= Number(max);\n      break;\n    default:\n      matched = false;\n  }\n  \n  if (matched) {\n    totalScore += Number(rule.Score);\n    triggeredRules.push(rule.Rule_Name);\n  }\n});\n\n// 7️⃣ 위험도 산정\nlet riskLevel = \"LOW\";\nif (totalScore >= 70) {\n  riskLevel = \"HIGH\";\n} else if (totalScore >= 40) {\n  riskLevel = \"MEDIUM\";\n} else if (totalScore > 0) {\n  riskLevel = \"LOW\";\n}\n\n// 8️⃣ 현재 시간 생성\nconst currentTime = new Date().toISOString();\n\n// 9️⃣ 최종 결과 - 비어있으면 새 값으로 초기화\nconst updatedUserRiskStatement = {\n  ...userState,\n  User_ID: userState.User_ID,\n  Current_Total_Score: totalScore,\n  Last_Update_Time: logData.ts || currentTime, // 비어있으면 현재 시간\n  Triggered_Rules: triggeredRules.filter(Boolean).join(\", \") || \"\", // 비어있으면 빈 문자열\n  Risk_Level: riskLevel,\n  Category: logData.event_type || \"UNKNOWN\"\n};\n\nreturn [{ json: updatedUserRiskStatement }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -432,
-        208
-      ],
-      "id": "5de079a0-607c-418d-afca-501747e73020",
-      "name": "위험도 계산"
-    },
-    {
-      "parameters": {
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "value": "https://app.slack.com/client/T0A420HQNJE/C0A7XUAEPL3",
-          "mode": "url"
-        },
-        "text": "=현재 비정상적인 금융 거래가 탐지되었습니다.\nLast_Update_Time : {{ $json.Last_Update_Time }}\nRisk_Level : {{ $('위험도 계산').item.json.Risk_Level }}\nTriggered_Rules : {{ $json.Triggered_Rules }}",
-        "otherOptions": {}
-      },
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.4,
-      "position": [
-        432,
+        -1792,
         -48
       ],
-      "id": "4e9e3792-082b-41ca-8688-0e3d569d2efd",
-      "name": "관리자 알림",
-      "webhookId": "7dfce69f-e0e9-47c2-af2c-0789de1a4af0",
-      "credentials": {
-        "slackApi": {
-          "id": "KaOSQxMzQktNKHtE",
-          "name": "Slack account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "809ee093-3630-4d02-8be4-dc93ce142f22",
-              "leftValue": "={{ $json.Category }}",
-              "rightValue": "LOGOUT",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -256,
-        208
-      ],
-      "id": "fb2fd1f5-7e8b-4002-bd57-af43304b580c",
-      "name": "Logout"
+      "id": "b5e970e7-8610-47a9-b537-a62161790f9d",
+      "name": "위험도 계산",
+      "executeOnce": false
     },
     {
       "parameters": {
         "operation": "update",
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit?gid=313461715#gid=313461715",
-          "mode": "url"
+          "value": "1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4",
+          "mode": "list",
+          "cachedResultName": "n8n_rule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": 313461715,
+          "value": 1810420859,
           "mode": "list",
           "cachedResultName": "User_Risk_Status",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit#gid=313461715"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit#gid=1810420859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -342,14 +234,14 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -64,
-        -32
+        -496,
+        64
       ],
-      "id": "0819d051-7d74-4f36-843f-ff6ad0e2528e",
+      "id": "7246d6af-b0fc-4912-be13-bcb32ffe0d7c",
       "name": "user_risk_reset",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "n9ciutuxc852fbMf",
+          "id": "V2rzgCtBLjJw9GB5",
           "name": "Google Sheets account"
         }
       }
@@ -359,15 +251,17 @@
         "operation": "update",
         "documentId": {
           "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit?gid=313461715#gid=313461715",
-          "mode": "url"
+          "value": "1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4",
+          "mode": "list",
+          "cachedResultName": "n8n_rule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit?usp=drivesdk"
         },
         "sheetName": {
           "__rl": true,
-          "value": 313461715,
+          "value": 1810420859,
           "mode": "list",
           "cachedResultName": "User_Risk_Status",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/12HCnwevb48fT9fwJEXUXIwZkA97bYUTl1AU2gp48pTo/edit#gid=313461715"
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit#gid=1810420859"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -438,264 +332,15 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -48,
-        224
+        -1248,
+        48
       ],
-      "id": "f73e533a-bcb3-4e72-ad7e-f24df9ffd7ad",
+      "id": "25e9a426-61fc-4f5d-88ed-cbf0101dbd47",
       "name": "user_risk_update",
       "credentials": {
         "googleSheetsOAuth2Api": {
-          "id": "n9ciutuxc852fbMf",
+          "id": "V2rzgCtBLjJw9GB5",
           "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "value": "SCOTT",
-          "mode": "list",
-          "cachedResultName": "SCOTT"
-        },
-        "table": {
-          "__rl": true,
-          "value": "LOGS",
-          "mode": "list",
-          "cachedResultName": "LOGS"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "EVENT_HOUR": "={{ $('When clicking ‘Execute workflow’').item.json.hour }}",
-            "AMOUNT": "={{ $('When clicking ‘Execute workflow’').item.json.amount }}",
-            "USER_ID": "={{ $('When clicking ‘Execute workflow’').item.json.user_id }}",
-            "TS": "={{ $('When clicking ‘Execute workflow’').item.json.ts }}",
-            "EVENT_TYPE": "={{ $('When clicking ‘Execute workflow’').item.json.event_type }}",
-            "SRC_IP": "={{ $('When clicking ‘Execute workflow’').item.json.src_ip }}",
-            "EVENT_RESULT": "={{ $('When clicking ‘Execute workflow’').item.json.result }}",
-            "EVENT_ID": "={{ $('When clicking ‘Execute workflow’').item.json.event_id }}",
-            "COUNTRY": "={{ $('When clicking ‘Execute workflow’').item.json.country }}",
-            "TO_BANK": "={{ $('When clicking ‘Execute workflow’').item.json.to_bank }}",
-            "TO_ACCOUNT_ID": "={{ $('When clicking ‘Execute workflow’').item.json.to_account_id }}"
-          },
-          "matchingColumns": [
-            "AMOUNT",
-            "COUNTRY",
-            "EVENT_HOUR",
-            "EVENT_ID",
-            "EVENT_RESULT",
-            "EVENT_TYPE",
-            "LOG_ID",
-            "SRC_IP",
-            "TO_ACCOUNT_ID",
-            "TO_BANK",
-            "TS",
-            "USER_ID"
-          ],
-          "schema": [
-            {
-              "id": "AMOUNT",
-              "displayName": "AMOUNT",
-              "required": false,
-              "display": true,
-              "type": "number",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "COUNTRY",
-              "displayName": "COUNTRY",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EVENT_HOUR",
-              "displayName": "EVENT_HOUR",
-              "required": true,
-              "display": true,
-              "type": "number",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EVENT_ID",
-              "displayName": "EVENT_ID",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EVENT_RESULT",
-              "displayName": "EVENT_RESULT",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "EVENT_TYPE",
-              "displayName": "EVENT_TYPE",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "LOG_ID",
-              "displayName": "LOG_ID",
-              "required": false,
-              "display": true,
-              "type": "number",
-              "defaultMatch": true,
-              "removed": true
-            },
-            {
-              "id": "SRC_IP",
-              "displayName": "SRC_IP",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "TO_ACCOUNT_ID",
-              "displayName": "TO_ACCOUNT_ID",
-              "required": false,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "TO_BANK",
-              "displayName": "TO_BANK",
-              "required": false,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "TS",
-              "displayName": "TS",
-              "required": true,
-              "display": true,
-              "type": "dateTime",
-              "defaultMatch": true,
-              "removed": false
-            },
-            {
-              "id": "USER_ID",
-              "displayName": "USER_ID",
-              "required": true,
-              "display": true,
-              "type": "string",
-              "defaultMatch": true,
-              "removed": false
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.oracleDatabase",
-      "typeVersion": 1,
-      "position": [
-        560,
-        560
-      ],
-      "id": "f70a95b9-d726-45b7-85bc-1a96fd7c1f08",
-      "name": "이상로그저장",
-      "credentials": {
-        "oracleDBApi": {
-          "id": "ZONPHcOP3OPnxyR1",
-          "name": "Oracle Database Credentials account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "c49735d5-9ffb-4d5e-89eb-535946206fc7",
-              "leftValue": "={{ $json.event_type }}",
-              "rightValue": "TRANSFER",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -1392,
-        240
-      ],
-      "id": "75ca4ede-0560-4203-b100-41ef92dc8fe8",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "operation": "push",
-        "list": "=log_transfer_{{ $json.user_id }}",
-        "messageData": "={{ $json.event_id }}, {{ $json.ts }}, {{ $json.result }}, {{ $json.amount }}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        -1200,
-        128
-      ],
-      "id": "0681a3a2-1d2c-4e8f-a598-3cd59650a607",
-      "name": "전송횟수저장",
-      "alwaysOutputData": false,
-      "executeOnce": false,
-      "credentials": {
-        "redis": {
-          "id": "D1pywVJc3yOZPlo8",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "llen",
-        "list": "=log_transfer_{{ $json.user_id }}"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        -1056,
-        224
-      ],
-      "id": "143c694d-6cd7-47dc-8897-5599fe425870",
-      "name": "전송횟수조회",
-      "credentials": {
-        "redis": {
-          "id": "D1pywVJc3yOZPlo8",
-          "name": "Redis account"
         }
       }
     },
@@ -706,7 +351,7 @@
             {
               "id": "760fe8a5-41f2-4728-8998-4d85d78441c0",
               "name": "tx_count",
-              "value": "={{ $json.log_transfer_user_01 }}",
+              "value": "={{ Number($json.tx_count || 0) }}",
               "type": "number"
             }
           ]
@@ -716,79 +361,262 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -880,
-        224
+        -2304,
+        -304
       ],
-      "id": "2a6cd0c0-e5c6-4d87-bcec-2a70a708e7ba",
+      "id": "97845557-1d06-4390-b8c7-b55d9aa3fb0e",
       "name": "get_tx_count"
     },
     {
       "parameters": {
         "operation": "delete",
-        "key": "=log_transfer_{{ $('When clicking ‘Execute workflow’').item.json.user_id }}"
+        "key": "=tx_count:{{ $json.User_ID }}"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        96,
-        -32
+        -352,
+        64
       ],
-      "id": "504c9284-21ae-40c1-b8b8-96f4d5da1687",
+      "id": "00c2e555-6e4e-4582-ad84-7b0f1038ff68",
       "name": "tx_count 초기화",
       "credentials": {
         "redis": {
-          "id": "D1pywVJc3yOZPlo8",
+          "id": "tuo5rglQup2fbC4o",
           "name": "Redis account"
         }
       }
-    }
-  ],
-  "pinData": {
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {
-          "ts": "2026-01-11T18:01:10+09:00",
-          "event_type": "LOGOUT",
-          "event_id": "e5b9f9b2-3c4e-4ed2-a1c8-0d4f4c3d1bbc",
-          "user_id": "user_01",
-          "result": "SUCCESS",
-          "src_ip": "203.0.113.10",
-          "country": "US",
-          "hour": 18
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4",
+          "mode": "list",
+          "cachedResultName": "n8n_rule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Rule_Set",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Category",
+              "lookupValue": "={{ $('Webhook').first().json.body.event_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2544,
+        -128
+      ],
+      "id": "e70cbdc4-fcaa-4993-852a-d414b01da9d3",
+      "name": "rule_set",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "V2rzgCtBLjJw9GB5",
+          "name": "Google Sheets account"
         }
       }
-    ]
-  },
-  "connections": {
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=다음은 FDS 시스템에서 감지된 사용자 활동 정보입니다.\n\n[감지 정보]\n- 사용자 ID: {{ $json.User_ID }}\n- 위험도 수준: {{ $json.Risk_Level }}\n- 위험 점수: {{ $json.Current_Total_Score }}\n- 트리거된 규칙: {{ $json.Triggered_Rules }}\n- 이벤트 유형: {{ $json.Category }}\n- 감지 시각: {{ $json.Last_Update_Time }}\n\n당신은 FDS 관리자에게 보안 이슈를 보고하는 역할이다.\n아래 지침을 지켜 관리자용 알림 메시지를 작성하라.\n\n1️⃣ [상황 요약]\n- 어떤 사용자가 어떤 비정상 행동을 했는지 명확하게 2~3문장으로 요약\n- \"야간 로그인 시도\", \"단시간 내 다수 거래\" 등 구체적인 패턴 언급\n\n2️⃣ [위험 분석]\n- 해당 행동이 왜 의심스러운지, 어떤 규칙에 걸렸는지 설명\n- 불릿 포인트 2~3개로 핵심만 정리\n\n3️⃣ [조치 사항]\n- 시스템이 취한 자동 조치 (계정 차단, 추가 인증 요구 등)\n- 관리자가 추가로 확인해야 할 사항\n\n4️⃣ [문체]\n- 간결하고 팩트 중심의 보고 형식\n- 전문 용어 사용 가능\n- 마크다운 형식(**굵게**, • 불릿) 사용 가능\n- 300자 이내\n\n출력은 한국어로 작성하라.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1056,
+        -240
+      ],
+      "id": "ef4358b5-b6ab-4501-ba41-d661620e4120",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "tx_count",
+        "key": "=tx_count:{{ $('Webhook').first().json.body.user_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        -288
+      ],
+      "id": "551865d7-4a98-4a9b-8b1f-4bc316b26902",
+      "name": "transfer_횟수_조회",
+      "credentials": {
+        "redis": {
+          "id": "tuo5rglQup2fbC4o",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -1056,
+        -96
+      ],
+      "id": "19dc3f2f-8678-45af-a71b-11fcb4918b74",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "mgbo2KVIqQmglTHs",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dd866d46-8a0b-4dfc-b853-55d3179511fd",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2960,
+        0
+      ],
+      "id": "c416daf5-516c-4f25-82eb-a48d5c289cd4",
+      "name": "Webhook",
+      "webhookId": "dd866d46-8a0b-4dfc-b853-55d3179511fd"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AA8FUFMUG",
+          "mode": "list",
+          "cachedResultName": "n8n"
+        },
+        "text": "={{ $('AI Agent').item.json.output }}\n\n────────────────\n📊 상세 정보\n- 사용자: {{ $('위험도 계산').item.json.User_ID }}\n- 위험도: {{ $('위험도 계산').item.json.Risk_Level }}\n- 점수: {{ $('위험도 계산').item.json.Current_Total_Score }}점\n- 감지 시각: {{ $('위험도 계산').item.json.Last_Update_Time }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        -672,
+        64
+      ],
+      "id": "8d8f4a3f-f352-4b2c-9e86-0ed08addc058",
+      "name": "관리자 알림",
+      "webhookId": "7dfce69f-e0e9-47c2-af2c-0789de1a4af0",
+      "credentials": {
+        "slackApi": {
+          "id": "pwz3kwSMVzyXxncG",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/user/update-risk",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "user_id",
+              "value": "=={{ $json.User_ID }}"
+            },
+            {
+              "name": "risk_level",
+              "value": "HIGH"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1488,
+        -592
+      ],
+      "id": "d253fa7d-738e-4e52-aac5-cff0a4f63608",
+      "name": "risk_level_HIGH"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/user/update-risk",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "user_id",
+              "value": "=={{ $json.User_ID }}"
+            },
+            {
+              "name": "risk_level",
+              "value": "MEDIUM"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1344,
+        368
+      ],
+      "id": "930bc425-1ec6-4ea3-bea5-c87ebb06c412",
+      "name": "risk_level_MEDIUM"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2016,
+        -64
+      ],
+      "id": "68e6439b-683e-4b6e-839d-a976b17f952c",
+      "name": "Merge",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
     "user_risk_statement": {
       "main": [
         [
           {
-            "node": "위험도 계산",
+            "node": "Merge",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "rule_set": {
-      "main": [
-        [
-          {
-            "node": "위험도 계산",
-            "type": "main",
-            "index": 0
+            "index": 2
           }
         ]
       ]
@@ -797,7 +625,7 @@
       "main": [
         [
           {
-            "node": "Logout",
+            "node": "위험도 분류",
             "type": "main",
             "index": 0
           }
@@ -808,37 +636,24 @@
       "main": [
         [
           {
-            "node": "관리자 알림",
+            "node": "AI Agent",
             "type": "main",
             "index": 0
           },
           {
-            "node": "이상로그저장",
+            "node": "risk_level_HIGH",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "이상로그저장",
+            "node": "risk_level_MEDIUM",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
-            "node": "이상로그저장",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Logout": {
-      "main": [
-        [
-          {
-            "node": "user_risk_reset",
+            "node": "user_risk_update",
             "type": "main",
             "index": 0
           }
@@ -854,31 +669,7 @@
     },
     "user_risk_update": {
       "main": [
-        [
-          {
-            "node": "위험도 분류",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "전송횟수저장",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "전송횟수조회",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "user_risk_reset": {
@@ -892,18 +683,40 @@
         ]
       ]
     },
-    "전송횟수저장": {
+    "get_tx_count": {
       "main": [
         [
           {
-            "node": "전송횟수조회",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "전송횟수조회": {
+    "rule_set": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "관리자 알림",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transfer_횟수_조회": {
       "main": [
         [
           {
@@ -914,9 +727,30 @@
         ]
       ]
     },
-    "get_tx_count": {
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
       "main": [
         [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          },
+          {
+            "node": "transfer_횟수_조회",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "rule_set",
             "type": "main",
@@ -929,18 +763,50 @@
           }
         ]
       ]
+    },
+    "관리자 알림": {
+      "main": [
+        [
+          {
+            "node": "user_risk_reset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "risk_level_HIGH": {
+      "main": [
+        []
+      ]
+    },
+    "risk_level_MEDIUM": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "위험도 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "d0cab3ac-faa0-42a3-8a30-79482079ab09",
+  "versionId": "2b023c4d-d6d0-49bd-b527-2b46f30ed2a3",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "9834082e2082ff3192fd06a958e5381173c15c4af883913e9e1be0b3c1e63e50"
+    "instanceId": "da7812da65f7a890c5cedea61c1efa5ae6ac84c7d3b7029d4d004acb742e1328"
   },
-  "id": "ADaKMgthQ1-_pQUbf6ZCq",
+  "id": "dr6Qns5P_sfBousm_pdI6",
   "tags": []
 }
