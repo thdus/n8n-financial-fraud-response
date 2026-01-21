@@ -86,7 +86,7 @@ n8n을 활용하여 **금융 서비스에서 발생하는 로그인 및 거래 �
 ### Storage
 
 - Google Sheets (Rule Management)
-- PostgreSQL / Elasticsearch (Anomaly Logs, Optional)
+- Redis / Elasticsearch (Anomaly Logs, Optional)
 
 ### Notification
 
