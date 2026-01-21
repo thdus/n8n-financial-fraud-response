@@ -129,21 +129,6 @@ public class TransferService {
             if ("MEDIUM".equals(riskLevel)) {
                 log.warn("TRANSFER_VERIFICATION_REQUIRED userId={} amount={} riskLevel=MEDIUM", userId, amount);
 
-                FdsEvent event = new FdsEvent(
-                        now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                        "TRANSFER",
-                        UUID.randomUUID().toString(),
-                        userId,
-                        RESULT_VERIFICATION_REQUIRED,
-                        srcIp,
-                        normalizedCountry,
-                        now.getHour(),
-                        amount,
-                        SAMPLE_TO_BANK,
-                        SAMPLE_TO_ACCOUNT_ID
-                );
-                eventSender.send(event);
-
                 return Map.of(
                         "status", RESULT_VERIFICATION_REQUIRED,
                         "message", "보안 확인이 필요합니다. 추가 인증을 완료해주세요.",
