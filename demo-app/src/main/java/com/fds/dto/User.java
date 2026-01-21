@@ -10,5 +10,5 @@ import lombok.Setter;
 public class User {
     private String userId;
     private String password;
-    private String status;
+    private Boolean blocked;
 }

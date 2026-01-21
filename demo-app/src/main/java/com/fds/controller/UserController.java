@@ -19,84 +19,85 @@ public class UserController {
         String userId = request.get("user_id");
         String riskLevel = request.get("risk_level"); // "LOW", "MEDIUM", "HIGH"
 
-        String newStatus;
-
         switch (riskLevel.toUpperCase()) {
             case "HIGH":
-                newStatus = "BLOCKED";
-                AuthService.updateUserStatus(userId, newStatus);
-                log.warn("RISK_UPDATE userId={} riskLevel={} newStatus=BLOCKED", userId, riskLevel);
-                break;
+                // HIGH: 자동 차단
+                AuthService.updateUserBlocked(userId, true);
+                log.warn("RISK_UPDATE userId={} riskLevel=HIGH blocked=true", userId);
+
+                return Map.of(
+                        "status", "success",
+                        "user_id", userId,
+                        "risk_level", "HIGH",
+                        "blocked", "true",
+                        "message", "User automatically blocked due to high risk"
+                );
 
             case "MEDIUM":
-                newStatus = "MEDIUM";
-                AuthService.updateUserStatus(userId, newStatus);
-                log.warn("RISK_UPDATE userId={} riskLevel={} newStatus=MEDIUM", userId, riskLevel);
-                break;
+                // MEDIUM: 추가 인증 필요 (차단은 안 함)
+                log.warn("RISK_UPDATE userId={} riskLevel=MEDIUM (verification required)", userId);
+
+                return Map.of(
+                        "status", "success",
+                        "user_id", userId,
+                        "risk_level", "MEDIUM",
+                        "blocked", "false",
+                        "message", "Additional verification required"
+                );
 
             case "LOW":
-            case "NORMAL":
             default:
-                newStatus = "NORMAL";
-                AuthService.updateUserStatus(userId, newStatus);
-                log.info("RISK_UPDATE userId={} riskLevel={} newStatus=NORMAL", userId, riskLevel);
-                break;
-        }
+                // LOW: 정상
+                log.info("RISK_UPDATE userId={} riskLevel=LOW", userId);
 
-        return Map.of(
-                "status", "success",
-                "user_id", userId,
-                "risk_level", riskLevel,
-                "new_status", newStatus
-        );
+                return Map.of(
+                        "status", "success",
+                        "user_id", userId,
+                        "risk_level", "LOW",
+                        "blocked", "false",
+                        "message", "Normal status"
+                );
+        }
     }
 
+    // 관리자가 수동으로 차단
     @PostMapping("/block")
     public Map<String, String> blockUser(@RequestBody Map<String, String> request) {
         String userId = request.get("user_id");
 
-        AuthService.updateUserStatus(userId, "BLOCKED");
-        log.warn("USER_BLOCKED userId={}", userId);
+        AuthService.updateUserBlocked(userId, true);
+        log.warn("USER_BLOCKED userId={} by_admin=true", userId);
 
         return Map.of(
                 "status", "success",
-                "message", "User blocked: " + userId
+                "message", "User blocked by admin: " + userId,
+                "blocked", "true"
         );
     }
 
+    // 관리자가 차단 해제 (오탐 처리)
     @PostMapping("/unblock")
     public Map<String, String> unblockUser(@RequestBody Map<String, String> request) {
         String userId = request.get("user_id");
 
-        AuthService.updateUserStatus(userId, "NORMAL");
-        log.info("USER_UNBLOCKED userId={}", userId);
+        AuthService.updateUserBlocked(userId, false);
+        log.info("USER_UNBLOCKED userId={} by_admin=true", userId);
 
         return Map.of(
                 "status", "success",
-                "message", "User unblocked: " + userId
+                "message", "User unblocked by admin: " + userId,
+                "blocked", "false"
         );
     }
 
-    @PostMapping("/set-mid")
-    public Map<String, String> setMidStatus(@RequestBody Map<String, String> request) {
-        String userId = request.get("user_id");
-
-        AuthService.updateUserStatus(userId, "MEDIUM");
-        log.warn("USER_MEDIUM_STATUS userId={}", userId);
-
-        return Map.of(
-                "status", "success",
-                "message", "User set to MEDIUM status: " + userId
-        );
-    }
-
+    // 사용자 상태 조회
     @GetMapping("/status/{userId}")
     public Map<String, Object> getUserStatus(@PathVariable String userId) {
-        String status = AuthService.getUserStatus(userId);
+        Boolean blocked = AuthService.getUserBlocked(userId);
 
         return Map.of(
                 "userId", userId,
-                "status", status
+                "blocked", blocked
         );
     }
 }

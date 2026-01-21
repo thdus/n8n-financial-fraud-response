@@ -4,3 +4,10 @@ spring:
     port: 6379
     database: 0
     timeout: 3000ms
+
+google:
+  sheets:
+    credentials-path: classpath:google-credential.json
+    spreadsheet-id: 1Ifc8H9MEUJJQGZ1pHwz1kD1ebALsa51jQaJsEpP83A4
+    user-risk-range: User_Risk_Status!A:F
+    rule-set-range: Rule_Set!A:I

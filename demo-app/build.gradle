@@ -23,6 +23,15 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // Google Sheets API
+    implementation 'com.google.apis:google-api-services-sheets:v4-rev20220927-2.0.0'
+
+    // Google Auth Library
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.19.0'
+
+    // Google API Client
+    implementation 'com.google.api-client:google-api-client:2.0.0'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

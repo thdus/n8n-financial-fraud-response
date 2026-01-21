@@ -25,9 +25,9 @@ public class AuthService {
 
     private static final Map<String, User> USERS = new ConcurrentHashMap<>();
 
-    static{
-        USERS.put("user_01", new User("user_01", "12345678", "NORMAL"));
-        USERS.put("user_02", new User("user_02", "12341234", "NORMAL"));
+    static {
+        USERS.put("user_01", new User("user_01", "12345678", false));
+        USERS.put("user_02", new User("user_02", "12341234", false));
     }
 
     private static final Map<String, String> COUNTRY_IP_MAP = Map.of(
@@ -39,13 +39,14 @@ public class AuthService {
     );
 
     private final EventSender eventSender;
+    private final GoogleSheetsService googleSheetsService;  // ← 추가!
 
     public String login(String userId, String password, String country, HttpServletRequest request) {
         String normalizedCountry = normalizeCountry(country);
         String srcIp = getClientIp(request, normalizedCountry);
         ZonedDateTime now = ZonedDateTime.now();
 
-        //사용자 조회
+        // 사용자 조회
         User user = USERS.get(userId);
         if (user == null) {
             log.warn("LOGIN_FAILURE userId={} reason=USER_NOT_FOUND", userId);
@@ -54,16 +55,7 @@ public class AuthService {
             return RESULT_FAILURE;
         }
 
-        //차단된 계정 체크
-        if ("BLOCKED".equals(user.getStatus())) {
-            log.warn("LOGIN_BLOCKED user_Id={} country={} srcIp={} status=BLOCKED",
-                        userId, normalizedCountry, srcIp);
-            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "BLOCKED");
-            eventSender.send(event);
-            return "BLOCKED";
-        }
-
-        //비밀번호 검증
+        // 비밀번호 검증
         if (!user.getPassword().equals(password)) {
             log.warn("LOGIN_FAILURE userId={} reason=INVALID_PASSWORD", userId);
             FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_FAILURE);
@@ -71,17 +63,44 @@ public class AuthService {
             return RESULT_FAILURE;
         }
 
-        //MID 상태 체크
-        if ("MEDIUM".equals(user.getStatus())) {
-            log.warn("LOGIN_MID_VERIFICATION userId={} country={} srcIp={} status=MID", userId, normalizedCountry, srcIp);
-            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "MID_VERIFICATION");
+        // 1. 먼저 blocked 상태 체크 (관리자가 설정한 상태)
+        if (user.getBlocked()) {
+            log.warn("LOGIN_BLOCKED userId={} country={} srcIp={} blocked=true",
+                    userId, normalizedCountry, srcIp);
+            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "BLOCKED");
             eventSender.send(event);
-            return "MID_VERIFICATION";
+            return "BLOCKED";
         }
 
-        //로그인 성공
-        log.info("LOGIN_SUCCESS userId={} country={} srcIp={} timestamp={} status={}",
-                userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME), user.getStatus());
+        // 2. Risk Level 조회 (실시간 위험도 체크)
+        String riskLevel = getRiskLevel(userId);
+
+        // HIGH: 자동으로 blocked 상태로 변경
+        if ("HIGH".equals(riskLevel)) {
+            log.warn("LOGIN_AUTO_BLOCKED userId={} country={} srcIp={} riskLevel=HIGH (auto-blocking)",
+                    userId, normalizedCountry, srcIp);
+
+            // User를 blocked 상태로 변경
+            user.setBlocked(true);
+
+            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "BLOCKED");
+            eventSender.send(event);
+            return "BLOCKED";
+        }
+
+        // MEDIUM: 추가 인증 필요 (blocked 상태는 변경하지 않음)
+        if ("MEDIUM".equals(riskLevel)) {
+            log.warn("LOGIN_VERIFICATION_REQUIRED userId={} country={} srcIp={} riskLevel=MEDIUM",
+                    userId, normalizedCountry, srcIp);
+            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "VERIFICATION_REQUIRED");
+            eventSender.send(event);
+            return "VERIFICATION_REQUIRED";
+        }
+
+        // LOW: 로그인 성공
+        log.info("LOGIN_SUCCESS userId={} country={} srcIp={} timestamp={} blocked={} riskLevel={}",
+                userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                user.getBlocked(), riskLevel);
 
         FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_SUCCESS);
         eventSender.send(event);
@@ -94,22 +113,45 @@ public class AuthService {
         String srcIp = getClientIp(request, normalizedCountry);
         ZonedDateTime now = ZonedDateTime.now();
 
-        //사용자 존재 확인
+        // 사용자 존재 확인
         if (!USERS.containsKey(userId)) {
             log.warn("LOGOUT_FAILURE userId={} reason=USER_NOT_FOUND", userId);
             return RESULT_FAILURE;
         }
 
-        //FDS 이벤트 전송
+        // FDS 이벤트 전송
         FdsEvent event = createAuthEvent("LOGOUT", userId, normalizedCountry, srcIp, RESULT_SUCCESS);
         eventSender.send(event);
 
-        //ELK 로그 기록
+        // ELK 로그 기록
         log.info("LOGOUT_SUCCESS userId={} country={} srcIp={} timestamp={}",
-                        userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
 
         return RESULT_SUCCESS;
     }
+
+    /**
+     * Google Sheets에서 Current_Total_Score를 조회하여 Risk Level 계산
+     */
+    private String getRiskLevel(String userId) {  // ← static 제거!
+        try {
+            // Google Sheets API로 Current_Total_Score 조회
+            int score = googleSheetsService.getCurrentTotalScore(userId);  // ← 변경!
+
+            if (score >= 70) {
+                return "HIGH";
+            } else if (score >= 40) {
+                return "MEDIUM";
+            } else {
+                return "LOW";
+            }
+        } catch (Exception e) {
+            log.error("Failed to get risk level for user: {}", userId, e);
+            return "LOW"; // 기본값
+        }
+    }
+
+    // ← getCurrentTotalScore 메서드 삭제!
 
     private FdsEvent createAuthEvent(String eventType, String userId, String country, String srcIp, String result) {
         ZonedDateTime now = ZonedDateTime.now();
@@ -150,18 +192,18 @@ public class AuthService {
         return ip;
     }
 
-    //user 상태 업데이트
-    public static void updateUserStatus(String userId, String status) {
+    // User blocked 상태 업데이트 (관리자용)
+    public static void updateUserBlocked(String userId, Boolean blocked) {
         User user = USERS.get(userId);
         if (user != null) {
-            user.setStatus(status);
+            log.info("Admin updating user blocked status: userId={} oldBlocked={} newBlocked={}",
+                    userId, user.getBlocked(), blocked);
+            user.setBlocked(blocked);
         }
     }
 
-    public static String getUserStatus(String userId) {
+    public static Boolean getUserBlocked(String userId) {
         User user = USERS.get(userId);
-        return user != null ? user.getStatus() : "UNKNOWN";
+        return user != null ? user.getBlocked() : false;
     }
-
 }
-
