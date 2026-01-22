@@ -25,7 +25,7 @@ public class GoogleSheetsConfig {
     private Resource credentialsResource;
 
     @Bean
-    public Sheets sheetsClient() throws IOException, GeneralSecurityException {  // ← 이름 변경!
+    public Sheets sheetsClient() throws IOException, GeneralSecurityException {
         log.info("Initializing Google Sheets API service");
 
         InputStream credentialsStream = credentialsResource.getInputStream();
