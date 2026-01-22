@@ -219,7 +219,6 @@ function showVerificationModal(originalPayload, statusElement) {
     });
 }
 
-// 송금 요청 함수 (재사용 가능)
 async function sendTransferRequest(payload, statusElement) {
     statusElement.classList.remove('success', 'error', 'info');
     statusElement.textContent = 'Processing transfer...';
@@ -238,19 +237,50 @@ async function sendTransferRequest(payload, statusElement) {
 
         const result = await response.json();
 
+        // ★ FORCE_LOGOUT 처리 - 자동 로그아웃
+        if (result.status === 'FORCE_LOGOUT') {
+            statusElement.classList.remove('info');
+            statusElement.classList.add('error');
+            statusElement.textContent = result.message;
+
+            // 2초 후 자동 로그아웃
+            setTimeout(async () => {
+                // 로그아웃 API 호출
+                const state = getAuthState();
+                if (state) {
+                    await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: state.userId,
+                            password: 'logout',
+                            country: state.country
+                        })
+                    });
+                }
+
+                // 세션 삭제 및 로그인 화면으로
+                setAuthState(null);
+                updateNavAvailability(false);
+                setActiveSection('login');
+
+                // 로그인 화면에 메시지 표시
+                loginStatus.classList.remove('success', 'info');
+                loginStatus.classList.add('error', 'visible');
+                loginStatus.textContent = '의심스러운 활동이 감지되어 계정이 차단되었습니다.';
+            }, 2000);
+            return;
+        }
+
         if (result.status === 'VERIFICATION_REQUIRED') {
-            // 추가 인증 필요
             statusElement.classList.remove('info');
             statusElement.classList.add('info');
             statusElement.textContent = result.message;
-
-            // 인증 모달 표시
             showVerificationModal(payload, statusElement);
             return;
         }
 
         if (result.status === 'BLOCKED') {
-            // 계정 차단
             statusElement.classList.remove('info');
             statusElement.classList.add('error');
             statusElement.textContent = result.message;
@@ -258,14 +288,12 @@ async function sendTransferRequest(payload, statusElement) {
         }
 
         if (result.status === 'SUCCESS') {
-            // 송금 성공
             statusElement.classList.remove('info');
             statusElement.classList.add('success');
             statusElement.innerHTML = `송금이 완료되었습니다<br>금액: ${result.amount.toLocaleString()}원<br>은행: ${result.toBank}`;
             return;
         }
 
-        // 기타 오류
         throw new Error(result.message || 'Transfer failed');
 
     } catch (error) {
@@ -274,6 +302,39 @@ async function sendTransferRequest(payload, statusElement) {
         statusElement.textContent = error.message || 'Transfer failed';
     }
 }
+
+// 로그인 후 blocked 상태 주기적 체크
+function startBlockedCheck(userId) {
+    // 10초마다 체크
+    const intervalId = setInterval(async () => {
+        try {
+            const response = await fetch(`/auth/check-blocked?userId=${userId}`);
+            const result = await response.json();
+
+            if (result.blocked) {
+                clearInterval(intervalId);
+
+                // 강제 로그아웃
+                alert('의심스러운 활동이 감지되어 계정이 차단되었습니다.');
+
+                // 로그아웃 처리
+                setAuthState(null);
+                updateNavAvailability(false);
+                setActiveSection('login');
+
+                loginStatus.classList.remove('info', 'success');
+                loginStatus.classList.add('error', 'visible');
+                loginStatus.textContent = '계정이 차단되어 자동 로그아웃되었습니다.';
+            }
+        } catch (error) {
+            console.error('Blocked check failed:', error);
+        }
+    }, 10000); // 10초마다
+
+    // intervalId를 전역 변수로 저장
+    window.blockedCheckInterval = intervalId;
+}
+
 
 loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -311,6 +372,10 @@ loginForm?.addEventListener('submit', async (event) => {
             setAuthState({ userId, country });
             updateNavAvailability(true);
             setActiveSection('transfer');
+
+            //blocked 상태 주기적 체크 시작
+            startBlockedCheck(userId);
+
         } else if (responseText === 'LOGIN_FAILURE') {
             loginStatus.classList.remove('info', 'success', 'error');
             loginStatus.classList.add('login-failure', 'visible');
@@ -369,6 +434,12 @@ logoutForm?.addEventListener('submit', async (event) => {
 
     const result = await sendRequest('/auth/logout', payload, logoutStatus);
     if (result.success) {
+
+        //blocked 체크 중지
+        if (window.blockedCheckInterval) {
+            clearInterval(window.blockedCheckInterval);
+        }
+
         setAuthState(null);
         updateNavAvailability(false);
         setActiveSection('login');

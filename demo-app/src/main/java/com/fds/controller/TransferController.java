@@ -28,21 +28,22 @@ public class TransferController {
         log.info("Transfer request: userId={}, amount={}, country={}, verified={}",
                 userId, amount, country, verified);
 
-        Map<String, Object> result = transferService.transfer(userId, amount, country, verified, request);
+        Map<String, Object> result = transferService.processTransfer(userId, amount, country, verified, request);
 
         return ResponseEntity.ok(result);
     }
 
-    // 기존 /transfer 엔드포인트 (혹시 다른 곳에서 쓰고 있다면)
+    // 기존 /transfer 엔드포인트
     @PostMapping("/transfer")
     public String transferLegacy(
             @RequestBody TransferRequest req,
             HttpServletRequest httpRequest
     ) {
-        transferService.transfer(
+        transferService.processTransfer(
                 req.userId(),
                 req.amount(),
                 req.country(),
+                false,
                 httpRequest
         );
 

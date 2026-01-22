@@ -3,11 +3,14 @@ package com.fds.controller;
 import com.fds.dto.LoginRequest;
 import com.fds.dto.User;
 import com.fds.service.AuthService;
+import com.fds.service.GoogleSheetsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleSheetsService googleSheetsService;
 
     @PostMapping("/login")
     public String login(
@@ -63,6 +67,12 @@ public class AuthController {
 
         // 이벤트 전송 없이 비밀번호만 검증
         return ResponseEntity.ok("VERIFIED");
+    }
+
+    @GetMapping("/check-blocked")
+    public ResponseEntity<Map<String, Boolean>> checkBlocked(@RequestParam String userId) {
+        boolean blocked = googleSheetsService.isUserBlocked(userId);
+        return ResponseEntity.ok(Map.of("blocked", blocked));
     }
 
 }

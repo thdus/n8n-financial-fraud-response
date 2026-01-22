@@ -50,41 +50,34 @@ public class AuthService {
         User user = USERS.get(userId);
         if (user == null) {
             log.warn("LOGIN_FAILURE userId={} reason=USER_NOT_FOUND", userId);
-            // FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_FAILURE);
-            // eventSender.send(event);  // ← 이 두 줄 삭제 또는 주석 처리
             return RESULT_FAILURE;
         }
 
         // 비밀번호 검증
         if (!user.getPassword().equals(password)) {
             log.warn("LOGIN_FAILURE userId={} reason=INVALID_PASSWORD", userId);
-            // FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_FAILURE);
-            // eventSender.send(event);  // ← 이 두 줄 삭제 또는 주석 처리
             return RESULT_FAILURE;
         }
 
-        // 1. 먼저 blocked 상태 체크 (관리자가 설정한 상태)
-        if (user.getBlocked()) {
-            log.warn("LOGIN_BLOCKED userId={} country={} srcIp={} blocked=true",
+        // 1. Google Sheets의 blocked 상태 체크
+        boolean isBlockedInSheets = googleSheetsService.isUserBlocked(userId);
+        if (isBlockedInSheets) {
+            log.warn("LOGIN_BLOCKED userId={} country={} srcIp={} blocked=true (from Google Sheets)",
                     userId, normalizedCountry, srcIp);
-            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "BLOCKED");
-            eventSender.send(event);
             return "BLOCKED";
         }
 
         // 2. Risk Level 조회 (실시간 위험도 체크)
         String riskLevel = getRiskLevel(userId);
 
-        // HIGH: 자동으로 blocked 상태로 변경
+        // HIGH: Google Sheets에 blocked=TRUE 설정
         if ("HIGH".equals(riskLevel)) {
             log.warn("LOGIN_AUTO_BLOCKED userId={} country={} srcIp={} riskLevel=HIGH (auto-blocking)",
                     userId, normalizedCountry, srcIp);
 
-            // User를 blocked 상태로 변경
-            user.setBlocked(true);
+            // Google Sheets에 blocked 설정
+            googleSheetsService.blockUser(userId);
 
-            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, "BLOCKED");
-            eventSender.send(event);
             return "BLOCKED";
         }
 
@@ -92,16 +85,11 @@ public class AuthService {
         if ("MEDIUM".equals(riskLevel)) {
             log.warn("LOGIN_SUCCESS_WITH_MEDIUM_RISK userId={} country={} srcIp={} riskLevel=MEDIUM",
                     userId, normalizedCountry, srcIp);
-            // MEDIUM이어도 로그인 성공 처리하고 이벤트 전송
-            FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_SUCCESS);
-            eventSender.send(event);
-            return RESULT_SUCCESS;
         }
 
-        // LOW: 로그인 성공
-        log.info("LOGIN_SUCCESS userId={} country={} srcIp={} timestamp={} blocked={} riskLevel={}",
-                userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                user.getBlocked(), riskLevel);
+        // LOW 또는 MEDIUM: 로그인 성공
+        log.info("LOGIN_SUCCESS userId={} country={} srcIp={} timestamp={} riskLevel={}",
+                userId, normalizedCountry, srcIp, now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME), riskLevel);
 
         FdsEvent event = createAuthEvent("LOGIN", userId, normalizedCountry, srcIp, RESULT_SUCCESS);
         eventSender.send(event);
@@ -131,13 +119,11 @@ public class AuthService {
         return RESULT_SUCCESS;
     }
 
-    /**
-     * Google Sheets에서 Current_Total_Score를 조회하여 Risk Level 계산
-     */
-    private String getRiskLevel(String userId) {  // ← static 제거!
+    // Google Sheets에서 Current_Total_Score를 조회하여 Risk Level 계산
+    private String getRiskLevel(String userId) {
         try {
             // Google Sheets API로 Current_Total_Score 조회
-            int score = googleSheetsService.getCurrentTotalScore(userId);  // ← 변경!
+            int score = googleSheetsService.getCurrentTotalScore(userId);
 
             if (score >= 70) {
                 return "HIGH";
@@ -148,11 +134,9 @@ public class AuthService {
             }
         } catch (Exception e) {
             log.error("Failed to get risk level for user: {}", userId, e);
-            return "LOW"; // 기본값
+            return "LOW";
         }
     }
-
-    // ← getCurrentTotalScore 메서드 삭제!
 
     private FdsEvent createAuthEvent(String eventType, String userId, String country, String srcIp, String result) {
         ZonedDateTime now = ZonedDateTime.now();
@@ -191,21 +175,6 @@ public class AuthService {
         }
 
         return ip;
-    }
-
-    // User blocked 상태 업데이트 (관리자용)
-    public static void updateUserBlocked(String userId, Boolean blocked) {
-        User user = USERS.get(userId);
-        if (user != null) {
-            log.info("Admin updating user blocked status: userId={} oldBlocked={} newBlocked={}",
-                    userId, user.getBlocked(), blocked);
-            user.setBlocked(blocked);
-        }
-    }
-
-    public static Boolean getUserBlocked(String userId) {
-        User user = USERS.get(userId);
-        return user != null ? user.getBlocked() : false;
     }
 
     public static User getUser(String userId) {

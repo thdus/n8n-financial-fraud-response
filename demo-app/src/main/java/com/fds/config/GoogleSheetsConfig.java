@@ -32,7 +32,7 @@ public class GoogleSheetsConfig {
 
         GoogleCredentials credentials = GoogleCredentials
                 .fromStream(credentialsStream)
-                .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS_READONLY));
+                .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
 
         return new Sheets.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(),
