@@ -136,7 +136,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 1️⃣ Merge된 입력 데이터 수집\nconst mergedData = $input.first().json;\n\n// rule_set은 별도로 가져오기\nconst ruleSet = $(\"rule_set\").all().map(item => item.json);\n\n// 2️⃣ userState 추출\nconst userState = {\n  User_ID: mergedData.User_ID,\n  Current_Total_Score: mergedData.Current_Total_Score || 0,\n  Last_Update_Time: mergedData.Last_Update_Time,\n  Triggered_Rules: mergedData.Triggered_Rules || \"\",\n  Risk_Level: mergedData.Risk_Level\n};\n\n// 3️⃣ tx_count 추출\nconst txCount = Number(mergedData.tx_count || 0);\n\n// 4️⃣ Webhook 데이터 - Switch나 transfer에서 가져와야 함\n// Merge에 Webhook 데이터가 없으므로 직접 참조\nlet logData;\ntry {\n  logData = $(\"Switch\").first().json;\n} catch (e) {\n  // Switch가 없으면 Webhook 직접 참조\n  logData = $(\"Webhook\").first().json.body;\n}\n\n// 5️⃣ 초기 상태\nlet totalScore = Number(userState.Current_Total_Score || 0);\nlet triggeredRules = [];\nif (userState.Triggered_Rules) {\n  triggeredRules.push(userState.Triggered_Rules);\n}\n\n// 6️⃣ 룰 평가\nruleSet.forEach(rule => {\n  if (!rule.Is_Active) return;\n  let actualValue;\n  \n  if (rule.Target_Field === \"tx_count\") {\n    actualValue = Number(txCount);\n  } else {\n    actualValue = logData[rule.Target_Field];\n  }\n  \n  if (actualValue === undefined || actualValue === null) return;\n  \n  let matched = false;\n  switch (rule.Operator) {\n    case \"!=\":\n      matched = actualValue != rule.Threshold;\n      break;\n    case \">\":\n      matched = Number(actualValue) > Number(rule.Threshold);\n      break;\n    case \">=\":\n      matched = Number(actualValue) >= Number(rule.Threshold);\n      break;\n    case \"between\":\n      const [min, max] = JSON.parse(\n        rule.Threshold.replace(/'/g, '\"')\n      );\n      matched =\n        Number(actualValue) >= Number(min) &&\n        Number(actualValue) <= Number(max);\n      break;\n    default:\n      matched = false;\n  }\n  \n  if (matched) {\n    totalScore += Number(rule.Score);\n    triggeredRules.push(rule.Rule_Name);\n  }\n});\n\n// 7️⃣ 위험도 산정\nlet riskLevel = \"LOW\";\nif (totalScore >= 70) {\n  riskLevel = \"HIGH\";\n} else if (totalScore >= 40) {\n  riskLevel = \"MEDIUM\";\n} else if (totalScore > 0) {\n  riskLevel = \"LOW\";\n}\n\n// 8️⃣ 현재 시간 생성\nconst currentTime = new Date().toISOString();\n\n// 9️⃣ 최종 결과 - 비어있으면 새 값으로 초기화\nconst updatedUserRiskStatement = {\n  ...userState,\n  User_ID: userState.User_ID,\n  Current_Total_Score: totalScore,\n  Last_Update_Time: logData.ts || currentTime, // 비어있으면 현재 시간\n  Triggered_Rules: triggeredRules.filter(Boolean).join(\", \") || \"\", // 비어있으면 빈 문자열\n  Risk_Level: riskLevel,\n  Category: logData.event_type || \"UNKNOWN\"\n};\n\nreturn [{ json: updatedUserRiskStatement }];"
+        "jsCode": "// 1️⃣ Merge된 입력 데이터 수집\nconst mergedData = $input.first().json;\n\n// rule_set은 별도로 가져오기\nconst ruleSet = $(\"rule_set\").all().map(item => item.json);\n\n// 2️⃣ userState 추출\nconst userState = {\n  User_ID: mergedData.User_ID,\n  Current_Total_Score: mergedData.Current_Total_Score || 0,\n  Last_Update_Time: mergedData.Last_Update_Time,\n  Triggered_Rules: mergedData.Triggered_Rules || \"\",\n  Risk_Level: mergedData.Risk_Level\n};\n\n// 3️⃣ tx_count 추출\nconst txCount = Number(mergedData.tx_count || 0);\n\n// 4️⃣ Webhook 데이터 - Switch나 transfer에서 가져와야 함\n// Merge에 Webhook 데이터가 없으므로 직접 참조\nlet logData;\ntry {\n  logData = $(\"Switch\").first().json;\n} catch (e) {\n  // Switch가 없으면 Webhook 직접 참조\n  logData = $(\"Webhook\").first().json.body;\n}\n\n// 5️⃣ 초기 상태\nlet totalScore = Number(userState.Current_Total_Score || 0);\nlet triggeredRules = [];\nif (userState.Triggered_Rules) {\n  triggeredRules.push(userState.Triggered_Rules);\n}\n\n// 6️⃣ 룰 평가\nruleSet.forEach(rule => {\n  if (!rule.Is_Active) return;\n  let actualValue;\n  \n  if (rule.Target_Field === \"tx_count\") {\n    actualValue = Number(txCount);\n  } else {\n    actualValue = logData[rule.Target_Field];\n  }\n  \n  if (actualValue === undefined || actualValue === null) return;\n  \n  let matched = false;\n  switch (rule.Operator) {\n    case \"!=\":\n      matched = actualValue != rule.Threshold;\n      break;\n    case \">\":\n      matched = Number(actualValue) > Number(rule.Threshold);\n      break;\n    case \">=\":\n      const todayAvg = Number(logData.avgAmount || 0);\n      \n      matched = Number(actualValue) >= todayAvg + Number(rule.Threshold);\n      break;\n    case \"between\":\n      const [min, max] = JSON.parse(\n        rule.Threshold.replace(/'/g, '\"')\n      );\n      matched =\n        Number(actualValue) >= Number(min) &&\n        Number(actualValue) <= Number(max);\n      break;\n    default:\n      matched = false;\n  }\n  \n  if (matched) {\n    totalScore += Number(rule.Score);\n    triggeredRules.push(rule.Rule_Name);\n  }\n});\n\n// 7️⃣ 위험도 산정\nlet riskLevel = \"LOW\";\nif (totalScore >= 70) {\n  riskLevel = \"HIGH\";\n} else if (totalScore >= 40) {\n  riskLevel = \"MEDIUM\";\n} else if (totalScore > 0) {\n  riskLevel = \"LOW\";\n}\n\n// 8️⃣ 현재 시간 생성\nconst currentTime = new Date().toISOString();\n\n// 9️⃣ 최종 결과 - 비어있으면 새 값으로 초기화\nconst updatedUserRiskStatement = {\n  ...userState,\n  User_ID: userState.User_ID,\n  Current_Total_Score: totalScore,\n  Last_Update_Time: logData.ts || currentTime, // 비어있으면 현재 시간\n  Triggered_Rules: triggeredRules.filter(Boolean).join(\", \") || \"\", // 비어있으면 빈 문자열\n  Risk_Level: riskLevel,\n  Category: logData.event_type || \"UNKNOWN\"\n};\n\nreturn [{ json: updatedUserRiskStatement }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -213,6 +213,16 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
+            },
+            {
+              "id": "blocked",
+              "displayName": "blocked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
             },
             {
               "id": "row_number",
@@ -313,6 +323,16 @@
               "canBeUsedToMatch": true
             },
             {
+              "id": "blocked",
+              "displayName": "blocked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
               "id": "row_number",
               "displayName": "row_number",
               "required": false,
@@ -332,8 +352,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1248,
-        48
+        -1264,
+        16
       ],
       "id": "25e9a426-61fc-4f5d-88ed-cbf0101dbd47",
       "name": "user_risk_update",
@@ -515,7 +535,7 @@
           "mode": "list",
           "cachedResultName": "n8n"
         },
-        "text": "={{ $('AI Agent').item.json.output }}\n\n────────────────\n📊 상세 정보\n- 사용자: {{ $('위험도 계산').item.json.User_ID }}\n- 위험도: {{ $('위험도 계산').item.json.Risk_Level }}\n- 점수: {{ $('위험도 계산').item.json.Current_Total_Score }}점\n- 감지 시각: {{ $('위험도 계산').item.json.Last_Update_Time }}",
+        "text": "={{ $('AI Agent').item.json.output }}\n\n────────────────\n📊 상세 정보\n- 사용자: {{ $('위험도 계산').item.json.User_ID }}\n- 위험도: {{ $('위험도 계산').item.json.Risk_Level }}\n- 점수: {{ $('위험도 계산').item.json.Current_Total_Score }}점\n- 감지 시각: {{ $('위험도 계산').item.json.Last_Update_Time }}\n<https://db8b999754d843eaa085e367de908dd8.us-central1.gcp.cloud.es.io/app/dashboards#/view/c1e254c6-1c6c-4522-b627-16b68c145c92?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-7d%2Fd,to:now))|📊 대시보드 바로가기>",
         "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
@@ -543,7 +563,7 @@
           "parameters": [
             {
               "name": "user_id",
-              "value": "=={{ $json.User_ID }}"
+              "value": "={{ $json.User_ID }}"
             },
             {
               "name": "risk_level",
@@ -795,6 +815,11 @@
           }
         ]
       ]
+    },
+    "tx_count 초기화": {
+      "main": [
+        []
+      ]
     }
   },
   "active": true,
@@ -802,7 +827,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "2b023c4d-d6d0-49bd-b527-2b46f30ed2a3",
+  "versionId": "ba7458b9-3917-42a7-ae76-9e68d024405e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "da7812da65f7a890c5cedea61c1efa5ae6ac84c7d3b7029d4d004acb742e1328"
