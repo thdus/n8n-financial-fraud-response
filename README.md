@@ -15,31 +15,7 @@ n8n을 활용하여 **금융 서비스에서 발생하는 로그인 및 거래 �
 
 ---
 ## 👨‍👩‍👦 개발 팀원
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/minwoo-00"><img src="https://github.com/minwoo-00.png" width="100px;" alt=""/></a>
-      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
-      <b>조민우</b>
-      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
-      <a href="https://github.com/minwoo-00">@minwoo-00</a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/ssh221"><img src="https://github.com/ssh221.png" width="100px;" alt=""/></a>
-      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
-      <b>신성혁</b>
-      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
-      <a href="https://github.com/ssh221">@ssh221</a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/thdus"><img src="https://github.com/thdus.png" width="100px;" alt=""/></a>
-      <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div>
-      <b>김소연</b>
-      <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div>
-      <a href="https://github.com/thdus">@thdus</a>
-    </td>
-  </tr>
-</table>
+<table> <tr> <td align="center"> <a href="https://github.com/minwoo-00"> <img src="https://github.com/minwoo-00.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>조민우</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/minwoo-00">@minwoo-00</a> <br/><br/> <sub> <b>Workflow 개발</b><br/> · n8n 기반 자동화 워크플로우 설계<br/> · 이벤트 흐름 정의 및 조건 분기 처리<br/> · 알림/외부 연동 노드 구성 </sub> </td> <td align="center"> <a href="https://github.com/ssh221"> <img src="https://github.com/ssh221.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>신성혁</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/ssh221">@ssh221</a> <br/><br/> <sub> <b>Workflow · Java 연동 & ELK</b><br/> · Java 서비스 ↔ Workflow 연계<br/> · 로그 수집 및 Kibana 시각화 </sub> </td> <td align="center"> <a href="https://github.com/thdus"> <img src="https://github.com/thdus.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>김소연</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/thdus">@thdus</a> <br/><br/> <sub> <b>Java 서비스 개발</b><br/> · Spring Boot 기반 API 개발<br/> · 인증/이체 등 핵심 비즈니스 로직 구현</sub> </td> </tr> </table>
 
 
 ---
@@ -402,4 +378,4 @@ Google Sheets에 차단 기록
 
 
 
-<table> <tr> <td align="center"> <a href="https://github.com/minwoo-00"> <img src="https://github.com/minwoo-00.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>조민우</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/minwoo-00">@minwoo-00</a> <br/><br/> <sub> <b>Workflow 개발</b><br/> · n8n 기반 자동화 워크플로우 설계<br/> · 이벤트 흐름 정의 및 조건 분기 처리<br/> · 알림/외부 연동 노드 구성 </sub> </td> <td align="center"> <a href="https://github.com/ssh221"> <img src="https://github.com/ssh221.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>신성혁</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/ssh221">@ssh221</a> <br/><br/> <sub> <b>Workflow · Java 연동 & ELK</b><br/> · Java 서비스 ↔ Workflow 연계<br/> · 로그 수집 및 Kibana 시각화 </sub> </td> <td align="center"> <a href="https://github.com/thdus"> <img src="https://github.com/thdus.png" width="100px;" alt=""/> </a> <div style="width:100px;border-top:1px solid #d0d7de;margin:8px 0;"></div> <b>김소연</b> <div style="width:60px;border-top:1px solid #d0d7de;margin:6px 0;"></div> <a href="https://github.com/thdus">@thdus</a> <br/><br/> <sub> <b>Java 서비스 개발</b><br/> · Spring Boot 기반 API 개발<br/> · 인증/이체 등 핵심 비즈니스 로직 구현</sub> </td> </tr> </table>
+
