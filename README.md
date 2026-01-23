@@ -303,10 +303,9 @@ resources/
     - redis 설정 : port=6379
 
   ### logback-spring.xml : 로깅 설정
-    - **기능**:
-      - 로그 레벨 설정 (INFO, DEBUG, ERROR)
-      - 파일 로그 출력 경로
-      - 일별 로그 파일 생성 (fds-2026-01-23.json)
+    - 로그 레벨 설정 (INFO, DEBUG, ERROR)
+    - 파일 로그 출력 경로
+    - 일별 로그 파일 생성 (fds-2026-01-23.json)
 
 ---
 
